@@ -1,12 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { HomeResponseDto } from './dto/home.dto';
+import { PropertyType } from '@prisma/client';
 
+interface GetHomesParam {
+  city?: string;
+  propertyType?: PropertyType;
+  price?: {
+    gte?: number;
+    lte?: number;
+  };
+}
 @Injectable()
 export class HomeService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async getHomes(): Promise<HomeResponseDto[]> {
+  async getHomes(filter: GetHomesParam): Promise<HomeResponseDto[]> {
     const homes = await this.prismaService.home.findMany({
       select: {
         id: true,
@@ -23,6 +32,7 @@ export class HomeService {
           take: 1,
         },
       },
+      where: filter,
     });
     return homes.map((home) => {
       const fetchedHome = { ...home, image: home.images[0].url };
