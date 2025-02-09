@@ -11,14 +11,12 @@ import {
   Put,
   Query,
   UnauthorizedException,
-  UseGuards,
 } from '@nestjs/common';
 import { HomeService } from './home.service';
 import { PropertyType, UserType } from '@prisma/client';
-import { CreateHomeDto, UpdateHomeDto } from './dto/home.dto';
+import { CreateHomeDto, InquireDto, UpdateHomeDto } from './dto/home.dto';
 import { User } from 'src/user/decorators/user.decorator';
 import { RequestUser } from 'src/user/interceptors/user.interceptor';
-import { AuthGuard } from 'src/guards/auth.guard';
 import { Roles } from 'src/decorators/roles.decoratoes';
 
 @Controller('home')
@@ -54,14 +52,14 @@ export class HomeController {
     return this.homeService.getHomeById(id);
   }
 
-  @Roles(UserType.REALTOR, UserType.ADMIN)
-  @UseGuards(AuthGuard)
+  @Roles(UserType.REALTOR)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   createHome(@Body() body: CreateHomeDto, @User() user: RequestUser) {
     return this.homeService.createHome(body, user.id);
   }
 
+  @Roles(UserType.REALTOR)
   @Put(':id')
   async updateHome(
     @Param('id', ParseUUIDPipe) id: string,
@@ -75,6 +73,7 @@ export class HomeController {
     return this.homeService.updateHomeById(id, body);
   }
 
+  @Roles(UserType.REALTOR)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteHome(
@@ -87,4 +86,16 @@ export class HomeController {
 
     return this.homeService.deleteHomeById(id);
   }
+
+  @Roles(UserType.BUYER)
+  @Post(':id/inquire')
+  inquire(
+    @Param('id', ParseUUIDPipe) homeId: string,
+    @User() user: RequestUser,
+    @Body() { message }: InquireDto,
+  ) {
+    return this.homeService.inquire(user, homeId, message);
+  }
+
+
 }
