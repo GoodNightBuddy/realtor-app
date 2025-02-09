@@ -13,7 +13,7 @@ interface GetHomesParam {
   };
 }
 
-const HOME_SELECT = {
+export const HOME_SELECT = {
   id: true,
   address: true,
   city: true,
@@ -41,6 +41,9 @@ export class HomeService {
       },
       where: filter,
     });
+
+    if (!homes.length) throw new NotFoundException();
+
     return homes.map((home) => {
       const fetchedHome = { ...home, image: home.images[0].url };
       delete fetchedHome.images;
@@ -157,6 +160,24 @@ export class HomeService {
         buyer_id: user.id,
         home_id: homeId,
         message,
+      },
+    });
+  }
+
+  getMessagesByHomeId(homeId: string) {
+    return this.prismaService.message.findMany({
+      where: {
+        home_id: homeId,
+      },
+      select: {
+        message: true,
+        buyer: {
+          select: {
+            name: true,
+            phone: true,
+            email: true,
+          },
+        },
       },
     });
   }
